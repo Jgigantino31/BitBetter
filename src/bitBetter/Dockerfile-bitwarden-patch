@@ -1,3 +1,4 @@
 FROM ghcr.io/bitwarden/self-host:beta
+LABEL org.opencontainers.image.source=https://github.com/Jgigantino31/BitBetter
 
 COPY ./temp/ /app/
