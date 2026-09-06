@@ -147,4 +147,4 @@ rm -f "$PWD/src/licenseGen/Core.dll"
 rm -f "$PWD/src/licenseGen/cert.pfx"
 
 # remove our temporary directory
-rm -rf "$TEMPDIRECTORY"
+#rm -rf "$TEMPDIRECTORY"
