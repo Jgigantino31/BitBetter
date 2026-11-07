@@ -23,6 +23,10 @@ if [ -f "$PWD/src/licenseGen/Core.dll" ]; then
 	rm -f "$PWD/src/licenseGen/Core.dll"
 fi
 
+if [ -f "$PWD/src/licenseGen/Data.dll" ]; then
+	rm -f "$PWD/src/licenseGen/Data.dll"
+fi
+
 if [ -f "$PWD/src/licenseGen/cert.pfx" ]; then
 	rm -f "$PWD/src/licenseGen/cert.pfx"
 fi
@@ -104,6 +108,9 @@ docker rm bitwarden-extract
 # run bitBetter, this applies our patches to the required files
 docker run -v "$TEMPDIRECTORY:/app/mount" --rm bitbetter/bitbetter
 
+# bitBetter runs as root, hand the extracted files back to the current user so they can be cleaned up
+docker run -v "$TEMPDIRECTORY:/app/mount" --rm --entrypoint chown bitbetter/bitbetter -R "$(id -u):$(id -g)" /app/mount
+
 # create a new image with the patched files
 if [ -f "$PWD/Dockerfile-bitwarden-patch" ]; then
 	rm -f "$PWD/Dockerfile-bitwarden-patch"
@@ -135,8 +142,11 @@ fi
 # remove our bitBetter image
 docker image rm bitbetter/bitbetter
 
-# copy our patched library to the licenseGen source directory
+# copy our patched library and its dependency assemblies to the licenseGen source directory
 cp -f "$TEMPDIRECTORY/Identity/Core.dll" "$PWD/src/licenseGen"
+if [ -f "$TEMPDIRECTORY/Identity/Data.dll" ]; then
+	cp -f "$TEMPDIRECTORY/Identity/Data.dll" "$PWD/src/licenseGen"
+fi
 cp -f "$PWD/.keys/cert.pfx" "$PWD/src/licenseGen"
 
 # build the licenseGen
@@ -144,6 +154,7 @@ docker build -t bitbetter/licensegen "$PWD/src/licenseGen"
 
 # clean the licenseGen source directory
 rm -f "$PWD/src/licenseGen/Core.dll"
+rm -f "$PWD/src/licenseGen/Data.dll"
 rm -f "$PWD/src/licenseGen/cert.pfx"
 
 # remove our temporary directory
